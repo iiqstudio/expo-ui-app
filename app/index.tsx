@@ -9,6 +9,8 @@ import { ScrollView } from "react-native";
 import { Text } from "@/components/ui/text";
 
 import { Link } from "expo-router";
+import { Button, ButtonText } from "@/components/ui/button";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const FeatureCard = ({ iconSvg: IconSvg, name, desc }: any) => {
   return (
@@ -31,15 +33,27 @@ const FeatureCard = ({ iconSvg: IconSvg, name, desc }: any) => {
 
 export default function Home() {
   return (
-    <Box className="flex-1  h-[100vh]">
-      <ScrollView
-        style={{ height: "100%" }}
-        contentContainerStyle={{ flexGrow: 1 }}
-      >
-        <Box className="flex flex-1 items-center justify-center my-16 mx-5 lg:my-24 lg:mx-32">
-          <Text>Hello world!</Text>
+    <SafeAreaView style={{ flex: 1 }}>
+      <Box className="flex-1">
+        <ScrollView
+          className="flex-1 w-full"
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Box className="my-16 mx-5 lg:my-24 lg:mx-32">
+            <Text className="text-3xl">LOGO</Text>
+          </Box>
+        </ScrollView>
+
+        <Box className="p-4 w-full">
+          <Button size="md" variant="solid" action="primary">
+            <ButtonText>Start now</ButtonText>
+          </Button>
         </Box>
-      </ScrollView>
-    </Box>
+      </Box>
+    </SafeAreaView>
   );
 }
