@@ -56,6 +56,10 @@ export default function StepOneScreen() {
   const router = useRouter();
   const [selectedMood, setSelectedMood] = useState("happy");
 
+  const handleContinue = () => {
+    router.replace("/(onboarding)/step-two");
+  };
+
   const handleNext = () => {
     if (selectedMood) {
       console.log("Выбранное настроение:", selectedMood);
@@ -91,7 +95,12 @@ export default function StepOneScreen() {
             onPress={handleNext}
             className="flex-row items-center p-2"
           >
-            <Button size="md" variant="link" action="primary">
+            <Button
+              size="md"
+              variant="link"
+              action="primary"
+              onPress={handleContinue}
+            >
               <ButtonText>Next</ButtonText>
             </Button>
             <Feather

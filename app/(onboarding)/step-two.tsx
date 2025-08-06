@@ -3,8 +3,6 @@ import { View, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-
-// Компоненты из твоей UI-библиотеки (gluestack-ui)
 import { Box } from "@/components/ui/box";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -15,9 +13,9 @@ import {
   CheckboxLabel,
   CheckboxIcon,
 } from "@/components/ui/checkbox";
-import { CheckIcon } from "@/components/ui/icon"; // или lucide-react-native
+import { CheckIcon } from "@/components/ui/icon";
+import SymptomCheckbox from "@/components/custom/SymptomCheckbox";
 
-// --- Данные для нашего списка ---
 const symptoms = [
   { id: "insomnia", label: "Insomnia" },
   { id: "apetite_changes", label: "Apetite changes" },
@@ -28,24 +26,19 @@ const symptoms = [
   { id: "emotional_burnout", label: "Emotional burnout" },
 ];
 
-// --- Основной компонент экрана ---
 export default function StepTwoScreen() {
   const router = useRouter();
 
-  // 1. Управление состоянием: храним массив ID выбранных симптомов
   const [selectedSymptoms, setSelectedSymptoms] = useState([
     "insomnia",
     "low_energy",
   ]);
 
-  // Функция для добавления/удаления симптома из массива
   const handleToggleSymptom = (symptomId: string) => {
     setSelectedSymptoms((currentSymptoms) => {
       if (currentSymptoms.includes(symptomId)) {
-        // Если уже есть - убираем (фильтруем)
         return currentSymptoms.filter((id) => id !== symptomId);
       } else {
-        // Если нет - добавляем
         return [...currentSymptoms, symptomId];
       }
     });
@@ -53,7 +46,6 @@ export default function StepTwoScreen() {
 
   const handleNext = () => {
     console.log("Выбранные симптомы:", selectedSymptoms);
-    // Здесь можно будет сохранить их в контекст
     router.push("/(onboarding)/value-prop");
   };
 
@@ -72,48 +64,17 @@ export default function StepTwoScreen() {
           Do you experience any of following symptoms during your period?
         </Text>
 
-        {/* 2. Используем VStack для списка чекбоксов */}
         <VStack space="md" className="flex-1">
-          {symptoms.map((symptom) => {
-            const isChecked = selectedSymptoms.includes(symptom.id);
-
-            return (
-              // 3. Используем компонент Checkbox
-              <Checkbox
-                key={symptom.id}
-                value={symptom.id}
-                isChecked={isChecked}
-                onChange={() => handleToggleSymptom(symptom.id)}
-                // Стилизуем сам контейнер Checkbox в зависимости от состояния
-                className={`
-                  p-4 rounded-lg border flex-row items-center w-full justify-between
-                  ${
-                    isChecked
-                      ? "bg-black border-black"
-                      : "bg-white border-neutral-300"
-                  }
-                `}
-              >
-                {/* Лейбл слева. Его цвет тоже зависит от состояния */}
-                <CheckboxLabel
-                  className={isChecked ? "text-white" : "text-black"}
-                >
-                  {symptom.label}
-                </CheckboxLabel>
-
-                {/* Индикатор (квадратик) справа */}
-                <CheckboxIndicator>
-                  <CheckboxIcon
-                    as={CheckIcon}
-                    className={isChecked ? "text-white" : "text-black"}
-                  />
-                </CheckboxIndicator>
-              </Checkbox>
-            );
-          })}
+          {symptoms.map((symptom) => (
+            <SymptomCheckbox
+              key={symptom.id}
+              label={symptom.label}
+              isChecked={selectedSymptoms.includes(symptom.id)}
+              onPress={() => handleToggleSymptom(symptom.id)}
+            />
+          ))}
         </VStack>
 
-        {/* Кнопка "Next" */}
         <Box className="flex-row justify-end items-center">
           <Button
             size="md"
