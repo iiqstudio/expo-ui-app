@@ -23,7 +23,7 @@ const MoodSelector = ({ selectedValue, onSelect }: any) => {
         {moods.map((mood) => {
           const isSelected = mood.id === selectedValue;
           return (
-            <Box className="flex items-center">
+            <Box className="flex items-center" key={mood.id}>
               <TouchableOpacity
                 key={mood.id}
                 onPress={() => onSelect(mood.id)}
