@@ -7,13 +7,6 @@ import { Box } from "@/components/ui/box";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { Button, ButtonText } from "@/components/ui/button";
-import {
-  Checkbox,
-  CheckboxIndicator,
-  CheckboxLabel,
-  CheckboxIcon,
-} from "@/components/ui/checkbox";
-import { CheckIcon } from "@/components/ui/icon";
 import SymptomCheckbox from "@/components/custom/SymptomCheckbox";
 
 const symptoms = [
@@ -29,10 +22,7 @@ const symptoms = [
 export default function StepTwoScreen() {
   const router = useRouter();
 
-  const [selectedSymptoms, setSelectedSymptoms] = useState([
-    "insomnia",
-    "low_energy",
-  ]);
+  const [selectedSymptoms, setSelectedSymptoms] = useState(["", ""]);
 
   const handleToggleSymptom = (symptomId: string) => {
     setSelectedSymptoms((currentSymptoms) => {
@@ -83,7 +73,7 @@ export default function StepTwoScreen() {
             onPress={handleNext}
           >
             <ButtonText>Next</ButtonText>
-            <Feather name="arrow-right" size={22} color="#3b82f6" />
+            <Feather name="arrow-right" size={22} color="black" />
           </Button>
         </Box>
       </Box>
