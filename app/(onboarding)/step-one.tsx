@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { View, TouchableOpacity } from "react-native"; // Используем TouchableOpacity для кнопок
+import { View, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Box } from "@/components/ui/box";
 import { Text } from "@/components/ui/text";
 import { Feather } from "@expo/vector-icons";
 import { HStack } from "@/components/ui/hstack";
+import { Button, ButtonText } from "@/components/ui/button";
 
 const moods = [
   { id: "calm", label: "Calm" },
@@ -17,23 +18,25 @@ const moods = [
 
 const MoodSelector = ({ selectedValue, onSelect }: any) => {
   return (
-    <Box className="bg-neutral-100 p-2 rounded-full w-full">
+    <Box className="bg-neutral-100 p-4 rounded-md w-full">
       <HStack space="sm" className="justify-between">
         {moods.map((mood) => {
           const isSelected = mood.id === selectedValue;
           return (
-            <TouchableOpacity
-              key={mood.id}
-              onPress={() => onSelect(mood.id)}
-              className={`flex-1 items-center justify-center p-2 rounded-full ${
-                isSelected ? "bg-white shadow" : ""
-              }`}
-            >
-              <Feather
-                name="smile"
-                size={24}
-                color={isSelected ? "black" : "gray"}
-              />
+            <Box className="flex items-center">
+              <TouchableOpacity
+                key={mood.id}
+                onPress={() => onSelect(mood.id)}
+                className={`flex items-center justify-center p-2 rounded-full ${
+                  isSelected ? "bg-white shadow" : ""
+                }`}
+              >
+                <Feather
+                  name="smile"
+                  size={24}
+                  color={isSelected ? "black" : "gray"}
+                />
+              </TouchableOpacity>
               <Text
                 className={`mt-1 text-xs ${
                   isSelected ? "text-black font-bold" : "text-neutral-500"
@@ -41,7 +44,7 @@ const MoodSelector = ({ selectedValue, onSelect }: any) => {
               >
                 {mood.label}
               </Text>
-            </TouchableOpacity>
+            </Box>
           );
         })}
       </HStack>
@@ -88,8 +91,15 @@ export default function StepOneScreen() {
             onPress={handleNext}
             className="flex-row items-center p-2"
           >
-            <Text className="text-lg font-bold mr-2">Next</Text>
-            <Feather name="arrow-right" size={22} color="black" />
+            <Button size="md" variant="link" action="primary">
+              <ButtonText>Next</ButtonText>
+            </Button>
+            <Feather
+              name="arrow-right"
+              size={22}
+              color="black"
+              className="ml-2"
+            />
           </TouchableOpacity>
         </Box>
       </Box>
