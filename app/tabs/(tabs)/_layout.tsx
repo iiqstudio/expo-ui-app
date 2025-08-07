@@ -1,7 +1,7 @@
 import React from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Tabs } from "expo-router";
-import { Feather } from "@expo/vector-icons";
+import { AntDesign, Entypo, Feather, MaterialIcons } from "@expo/vector-icons";
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>["name"];
@@ -14,10 +14,10 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "black", // Цвет активной иконки
-        tabBarInactiveTintColor: "gray", // Цвет неактивной иконки
+        tabBarActiveTintColor: "black",
+        tabBarInactiveTintColor: "gray",
         tabBarStyle: {
-          backgroundColor: "white", // Цвет фона таб-бара
+          backgroundColor: "white",
         },
       }}
     >
@@ -27,16 +27,16 @@ export default function TabLayout() {
           title: "Home",
           headerShown: false,
           tabBarIcon: ({ color }) => (
-            <Feather name="home" size={28} color={color} />
+            <Entypo name="home" size={24} color="black" />
           ),
         }}
       />
       <Tabs.Screen
-        name="shorts"
+        name="calendar"
         options={{
-          title: "Shorts",
+          title: "Calendar",
           tabBarIcon: ({ color }) => (
-            <Feather name="calendar" size={28} color={color} />
+            <MaterialIcons name="calendar-month" size={24} color="black" />
           ),
         }}
       />
@@ -45,7 +45,7 @@ export default function TabLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color }) => (
-            <Feather name="user" size={28} color={color} />
+            <AntDesign name="user" size={24} color="black" />
           ),
         }}
       />
@@ -54,7 +54,7 @@ export default function TabLayout() {
         options={{
           title: "Courses",
           tabBarIcon: ({ color }) => (
-            <Feather name="book-open" size={28} color={color} />
+            <Entypo name="open-book" size={24} color="black" />
           ),
         }}
       />

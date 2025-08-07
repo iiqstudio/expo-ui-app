@@ -31,10 +31,10 @@ export default function Home() {
           </Box>
         </ScrollView>
 
-        <Box>
+        {/* <Box>
           <Text className="text-center text-lg font-bold">Test purshase</Text>
           <PaymentTest />
-        </Box>
+        </Box> */}
 
         <Box className="p-4 w-full">
           <Button

@@ -3,13 +3,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ScrollView, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
-// Компоненты из твоей UI-библиотеки
 import { Box } from "@/components/ui/box";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import { useRouter } from "expo-router";
 
-// --- Данные для сетки настроек ---
 const settingsItems = [
   { id: "premium", label: "Go Premium", icon: "star" },
   { id: "goals", label: "My goals", icon: "target" },
@@ -19,7 +16,6 @@ const settingsItems = [
   { id: "delete", label: "Delete profile", icon: "trash-2" },
 ];
 
-// --- Переиспользуемый компонент для кнопки в сетке ---
 const SettingsButton = ({ label, icon, onPress }: any) => (
   <TouchableOpacity onPress={onPress} className="w-1/3 p-2 items-center">
     <VStack space="sm" className="items-center">
@@ -29,7 +25,6 @@ const SettingsButton = ({ label, icon, onPress }: any) => (
   </TouchableOpacity>
 );
 
-// --- Основной компонент экрана ---
 export default function ProfileScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
@@ -42,9 +37,8 @@ export default function ProfileScreen() {
           <Text className="text-xl font-bold">Name</Text>
 
           {/* 2. Блок настроек */}
-          <Box className="w-full bg-neutral-100 p-4 rounded-xl">
+          <Box className="w-full bg-neutral-100 p-4 rounded-xl mt-12">
             <Text className="text-lg font-bold mb-4">Settings</Text>
-
             {/* Сетка с настройками */}
             <Box className="flex-row flex-wrap">
               {settingsItems.map((item) => (
