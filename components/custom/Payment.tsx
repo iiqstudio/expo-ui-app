@@ -1,59 +1,107 @@
-import { useIAP } from "expo-iap";
-import React from "react";
-import { View, TouchableOpacity, Text } from "react-native";
+// components/custom/Payment.tsx
+
+import React, { useEffect } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+} from "react-native";
+
+// Импортируем только то, что нужно: хук и типы
+import { useIAP, type Purchase, type IAPItem } from "expo-iap";
 
 const productIds = ["holy_app_test_v1"];
 
 export default function PaymentTest() {
+  // Используем хук ТОЧНО КАК В ДОКУМЕНТАЦИИ
   const {
     connected,
     products,
-    requestProducts,
-    requestPurchase,
-    validateReceipt,
+    requestProducts, // <-- Получаем функцию из хука
+    requestPurchase, // <-- И эту тоже
   } = useIAP({
-    onPurchaseSuccess: (purchase) => {
+    // Передаем обработчики событий ВНУТРЬ хука
+    onPurchaseSuccess: (purchase: Purchase) => {
       console.log("Purchase successful:", purchase);
-      // Handle successful purchase
-      validatePurchase(purchase);
+      Alert.alert("Успех!", `Вы приобрели ${purchase.productId}`);
+      // Здесь нужно вызвать finishTransactionAsync, но давайте сначала добьемся показа продуктов
     },
-    onPurchaseError: (error) => {
+    onPurchaseError: (error: any) => {
       console.error("Purchase failed:", error);
-      // Handle purchase error
+      // Не показываем Alert, если пользователь просто нажал "Отмена"
+      if (error.code !== "E_USER_CANCELLED") {
+        Alert.alert("Ошибка покупки", error.message);
+      }
     },
   });
 
-  React.useEffect(() => {
+  // Используем функцию из хука, когда connected === true
+  useEffect(() => {
     if (connected) {
-      requestProducts({ skus: productIds, type: "inapp" });
+      console.log("Подключено! Запрашиваю продукты...");
+      requestProducts({ skus: productIds }); // Для iOS достаточно `skus`
     }
   }, [connected]);
 
-  const validatePurchase = async (purchase: any) => {
-    try {
-      const result = await validateReceipt(purchase.transactionId);
-      if (result.isValid) {
-        // Grant user the purchased content
-        console.log("Receipt is valid");
-      }
-    } catch (error) {
-      console.error("Validation failed:", error);
-    }
-  };
+  // UI для отображения
+  if (!connected) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator />
+        <Text style={styles.statusText}>Подключение к App Store...</Text>
+      </View>
+    );
+  }
 
   return (
-    <View>
-      <Text>GI IAP!</Text>
-      {products.map((product) => (
-        <TouchableOpacity
-          key={product.id}
-          onPress={() => requestPurchase({ request: { sku: product.id } })}
-        >
-          <Text>
-            {product.title} - {product.displayPrice}
-          </Text>
-        </TouchableOpacity>
-      ))}
+    <View style={styles.container}>
+      <Text style={styles.header}>GI IAP!</Text>
+
+      {products.length === 0 ? (
+        <Text style={styles.statusText}>Продукты не найдены.</Text>
+      ) : (
+        products.map((product: IAPItem) => (
+          <TouchableOpacity
+            key={product.productId}
+            style={styles.button}
+            // Используем функцию из хука при нажатии
+            onPress={() => requestPurchase({ sku: product.productId })}
+          >
+            <Text style={styles.buttonText}>
+              {product.title} - {product.price}
+            </Text>
+          </TouchableOpacity>
+        ))
+      )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    alignItems: "center",
+  },
+  header: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  statusText: {
+    color: "gray",
+  },
+  button: {
+    backgroundColor: "#007AFF",
+    padding: 15,
+    borderRadius: 8,
+    width: "100%",
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 16,
+  },
+});
