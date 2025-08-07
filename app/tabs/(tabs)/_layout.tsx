@@ -1,7 +1,7 @@
 import React from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Tabs } from "expo-router";
-import { useClientOnlyValue } from "@/components/useClientOnlyValue";
+import { Feather } from "@expo/vector-icons";
 
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>["name"];
@@ -14,31 +14,48 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
+        tabBarActiveTintColor: "black", // Цвет активной иконки
+        tabBarInactiveTintColor: "gray", // Цвет неактивной иконки
+        tabBarStyle: {
+          backgroundColor: "white", // Цвет фона таб-бара
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Expo V3",
-          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
-        }}
-      />
-
-      <Tabs.Screen
-        name="tab1"
-        options={{
-          title: "Tab 1",
-          tabBarIcon: ({ color }) => <TabBarIcon name="star-o" color={color} />,
+          title: "Home",
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <Feather name="home" size={28} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="tab2"
+        name="shorts"
         options={{
-          title: "Tab 2",
-          tabBarIcon: ({ color }) => <TabBarIcon name="star-o" color={color} />,
+          title: "Shorts",
+          tabBarIcon: ({ color }) => (
+            <Feather name="calendar" size={28} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color }) => (
+            <Feather name="user" size={28} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="courses"
+        options={{
+          title: "Courses",
+          tabBarIcon: ({ color }) => (
+            <Feather name="book-open" size={28} color={color} />
+          ),
         }}
       />
     </Tabs>

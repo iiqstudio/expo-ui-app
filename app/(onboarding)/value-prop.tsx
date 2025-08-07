@@ -6,12 +6,19 @@ import { Feather } from "@expo/vector-icons";
 
 import { Box } from "@/components/ui/box";
 import { Text } from "@/components/ui/text";
+import { Button, ButtonText } from "@/components/ui/button";
 
 const handleFinish = () => {
   console.log("Переход в основное приложение!");
 };
 
 export default function ValuePropScreen() {
+  const router = useRouter();
+
+  const handleNext = () => {
+    router.replace("/tabs/profile");
+  };
+
   const mockData = {
     symptoms: ["Insomnia", "Low Energy"],
     mood: "Happy",
@@ -45,13 +52,15 @@ export default function ValuePropScreen() {
 
         {/* 3. Кнопка "Next" */}
         <Box className="flex-row justify-end items-center">
-          <TouchableOpacity
-            onPress={handleFinish}
-            className="flex-row items-center p-2"
+          <Button
+            size="md"
+            variant="link"
+            action="primary"
+            onPress={handleNext}
           >
-            <Text className="text-lg font-bold mr-2">Next</Text>
+            <ButtonText>Next</ButtonText>
             <Feather name="arrow-right" size={22} color="black" />
-          </TouchableOpacity>
+          </Button>
         </Box>
       </Box>
     </SafeAreaView>
