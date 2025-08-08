@@ -62,7 +62,7 @@ function RootLayoutNav() {
   return (
     <GluestackUIProvider mode={colorScheme === "dark" ? "dark" : "light"}>
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Box className="flex-1 md:max-w-[700px] w-[700px] mx-auto">
+        <Box className="flex-1 w-full md:max-w-[700px] mx-auto">
           <Slot />
         </Box>
       </ThemeProvider>
