@@ -1,92 +1,249 @@
 import * as FileSystem from "expo-file-system";
 import React, { useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { Alert, Platform, StyleSheet, Text, View } from "react-native";
 import { PlayerControls } from "./PlayerControls";
 import { DeleteButton } from "./DeleteButton";
 import { DownloadButton } from "./DownloadButton";
 import { Audio } from "expo-av";
 
-const audioSources = [
+const isWeb = Platform.OS === "web";
+const CACHE_NAME = "audio-cache-v1";
+
+type Track = {
+  id: string;
+  title: string;
+  artist: string;
+  url: string;
+};
+
+const MOCKED_TRACKS: Track[] = [
   {
-    bitrate: "Низкое",
-    url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3",
-    id: "track_15",
-  },
-  {
-    bitrate: "Среднее",
-    url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
     id: "track_1",
+    title: "Качество 1",
+    artist: "W3Schools",
+    url: "https://www.w3schools.com/html/horse.mp3",
   },
   {
-    bitrate: "Высокое",
-    url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
-    id: "track_8",
+    id: "track_2",
+    title: "Качество 2",
+    artist: "Mozilla",
+    url: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3",
+  },
+  {
+    id: "track_3",
+    title: "Качество 3",
+    artist: "Mozilla",
+    url: "https://interactive-examples.mdn.mozilla.net/media/cc0-audio/ticking-clock.mp3",
   },
 ];
 
 export default function AdvancedAudioPlayer() {
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState(audioSources[1]);
+  const [currentTrack, setCurrentTrack] = useState<Track | null>(
+    MOCKED_TRACKS[0]
+  ); // Начинаем с первого трека
   const [downloadedTracks, setDownloadedTracks] = useState<
-    Record<string, string>
+    Record<string, string | boolean>
   >({});
 
+  // Эффект для первоначальной проверки скачанных файлов/кэша
   useEffect(() => {
     const checkDownloads = async () => {
-      const downloads: Record<string, string> = {};
-      for (const source of audioSources) {
-        const fileUri = FileSystem.documentDirectory + `${source.id}.mp3`;
-        const fileInfo = await FileSystem.getInfoAsync(fileUri);
-        if (fileInfo.exists) {
-          downloads[source.id] = fileUri;
+      const downloads: Record<string, string | boolean> = {};
+
+      if (isWeb) {
+        console.log("Проверяю кэш браузера...");
+        const cache = await caches.open(CACHE_NAME);
+
+        // 1. Получаем ВСЕ ключи (запросы), которые есть в кэше
+        const cachedRequests = await cache.keys();
+
+        // 2. Превращаем их в Set из URL-адресов для быстрой проверки
+        const cachedUrls = new Set(cachedRequests.map((req) => req.url));
+
+        console.log("Найденные URL в кэше:", cachedUrls);
+
+        // 3. Теперь проверяем наши треки по этому списку
+        for (const track of MOCKED_TRACKS) {
+          if (cachedUrls.has(track.url)) {
+            console.log(`Трек "${track.title}" найден в кэше!`);
+            downloads[track.id] = true;
+          }
+        }
+      } else {
+        // Нативная логика остается без изменений
+        for (const track of MOCKED_TRACKS) {
+          const fileUri = FileSystem.documentDirectory + `${track.id}.mp3`;
+          const fileInfo = await FileSystem.getInfoAsync(fileUri);
+          if (fileInfo.exists) {
+            downloads[track.id] = fileUri;
+          }
         }
       }
+
       setDownloadedTracks(downloads);
     };
     checkDownloads();
   }, []);
 
+  // Эффект для очистки звука при выходе
   useEffect(() => {
     return () => {
       sound?.unloadAsync();
     };
   }, [sound]);
 
-  const playSound = async (source: any) => {
-    if (sound) {
-      await sound.unloadAsync();
-    }
-    const localUri = downloadedTracks[source.id];
-    const sourceUri = localUri || source.url;
+  // --- 4. ОСНОВНАЯ ЛОГИКА ---
 
-    console.log(`Загрузка с ${localUri ? "устройства" : "интернета"}`);
+  const playSound = async (track: Track) => {
+    if (sound) await sound.unloadAsync();
+
+    let sourceUri: string;
+    const isDownloaded = !!downloadedTracks[track.id];
+
+    if (isDownloaded) {
+      if (isWeb) {
+        console.log(`Проверяю кэш для трека "${track.title}"...`);
+        const cache = await caches.open(CACHE_NAME);
+
+        // ИСПОЛЬЗУЕМ ОПЦИЮ ignoreSearch ДЛЯ НАДЕЖНОСТИ
+        const response = await cache.match(track.url, { ignoreSearch: true });
+
+        if (response) {
+          console.log(`Трек найден в кэше. Создаю blob...`);
+          const blob = await response.blob();
+          sourceUri = URL.createObjectURL(blob);
+        } else {
+          console.warn(
+            `Рассинхронизация: трек "${track.title}" не найден в кэше. Загружаю из сети.`
+          );
+          sourceUri = track.url;
+          setDownloadedTracks((prev) => {
+            const newState = { ...prev };
+            delete newState[track.id];
+            return newState;
+          });
+        }
+      } else {
+        console.log(`Загрузка ${track.title} из файловой системы...`);
+        sourceUri = downloadedTracks[track.id] as string;
+      }
+    } else {
+      console.log(`Загрузка ${track.title} из интернета...`);
+      sourceUri = track.url;
+    }
+
     try {
-      const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri: sourceUri },
-        { shouldPlay: true }
-      );
+      const { sound: newSound } = await Audio.Sound.createAsync({
+        uri: sourceUri,
+      });
+      await newSound.playAsync();
       setSound(newSound);
       setIsPlaying(true);
-      setCurrentTrack(source);
+      setCurrentTrack(track);
     } catch (error) {
-      console.error("Ошибка загрузки аудио:", error);
+      console.error("Ошибка воспроизведения:", error);
       Alert.alert("Ошибка", "Не удалось воспроизвести трек.");
     }
   };
 
+  const downloadTrack = async (track: Track) => {
+    if (downloadedTracks[track.id])
+      return Alert.alert("Уведомление", "Трек уже скачан.");
+
+    if (isWeb) {
+      const PROXY_URL = "https://corsproxy.io/?";
+      const proxiedUrl = PROXY_URL + encodeURIComponent(track.url);
+
+      try {
+        console.log(`Скачиваю через прокси: ${proxiedUrl}`);
+        const response = await fetch(proxiedUrl);
+        if (!response.ok)
+          throw new Error(
+            `Сетевой ответ был не в порядке: ${response.statusText}`
+          );
+
+        const cache = await caches.open(CACHE_NAME);
+        await cache.put(track.url, response.clone());
+        console.log("Запись в кэш инициирована.");
+
+        // --- НОВАЯ СУПЕР-НАДЕЖНАЯ ПРОВЕРКА ---
+        // Прежде чем обновлять UI, убедимся, что файл реально лежит в кэше
+        const check = await cache.match(track.url, { ignoreSearch: true });
+        if (check) {
+          console.log(
+            "ПРОВЕРКА ПРОШЛА: Файл успешно найден в кэше после записи."
+          );
+          setDownloadedTracks((prev) => ({ ...prev, [track.id]: true }));
+          Alert.alert("Успех", "Трек сохранен и готов к работе!");
+        } else {
+          // Если даже после записи его там нет - это серьезная проблема браузера/среды
+          throw new Error(
+            "Не удалось верифицировать запись в кэш. Файл не сохранился."
+          );
+        }
+      } catch (error) {
+        console.error("ПОЙМАНА ОШИБКА ВНУТРИ downloadTrack:", error);
+        Alert.alert(
+          "Ошибка",
+          "Не удалось сохранить трек. Подробности в консоли."
+        );
+      }
+    } else {
+      // Нативная логика не меняется
+      try {
+        const fileUri = FileSystem.documentDirectory + `${track.id}.mp3`;
+        const { uri } = await FileSystem.downloadAsync(track.url, fileUri);
+        setDownloadedTracks((prev) => ({ ...prev, [track.id]: uri }));
+        Alert.alert("Успех", "Трек скачан на устройство!");
+      } catch (error) {
+        console.error("Ошибка скачивания:", error);
+        Alert.alert("Ошибка", "Не удалось скачать трек.");
+      }
+    }
+  };
+
+  const deleteTrack = async (track: Track) => {
+    if (!downloadedTracks[track.id]) return;
+
+    Alert.alert(
+      "Удалить трек",
+      `Вы уверены, что хотите удалить "${track.title}"?`,
+      [
+        { text: "Отмена", style: "cancel" },
+        {
+          text: "Удалить",
+          style: "destructive",
+          onPress: async () => {
+            if (isWeb) {
+              const cache = await caches.open(CACHE_NAME);
+              await cache.delete(track.url);
+            } else {
+              await FileSystem.deleteAsync(
+                downloadedTracks[track.id] as string
+              );
+            }
+            setDownloadedTracks((prev) => {
+              const newState = { ...prev };
+              delete newState[track.id];
+              return newState;
+            });
+            Alert.alert("Успех", "Трек удален.");
+          },
+        },
+      ]
+    );
+  };
+
+  // Простые функции управления плеером
   const togglePlayPause = async () => {
     if (!sound) {
-      playSound(currentTrack);
+      if (currentTrack) playSound(currentTrack);
       return;
     }
-    if (isPlaying) {
-      await sound.pauseAsync();
-      setIsPlaying(false);
-    } else {
-      await sound.playAsync();
-      setIsPlaying(true);
-    }
+    isPlaying ? await sound.pauseAsync() : await sound.playAsync();
+    setIsPlaying(!isPlaying);
   };
 
   const stopSound = async () => {
@@ -97,60 +254,19 @@ export default function AdvancedAudioPlayer() {
     }
   };
 
-  const switchBitrate = (newSource: any) => {
-    if (currentTrack.id === newSource.id) return;
-    playSound(newSource);
-  };
-
-  const downloadTrack = async (source: any) => {
-    if (downloadedTracks[source.id]) {
-      Alert.alert("Трек уже скачан");
-      return;
-    }
-    try {
-      const localUri = FileSystem.documentDirectory + `${source.id}.mp3`;
-      const { uri } = await FileSystem.downloadAsync(source.url, localUri);
-      setDownloadedTracks((prev) => ({ ...prev, [source.id]: uri }));
-      Alert.alert("Успех", "Трек скачан на устройство!");
-    } catch (error) {
-      console.error("Ошибка скачивания:", error);
-      Alert.alert("Ошибка", "Не удалось скачать трек.");
-    }
-  };
-
-  const deleteTrack = (source: any) => {
-    const localUri = downloadedTracks[source.id];
-    if (!localUri) return;
-
-    Alert.alert("Удалить трек", `Вы уверены?`, [
-      { text: "Отмена", style: "cancel" },
-      {
-        text: "Удалить",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await FileSystem.deleteAsync(localUri);
-            setDownloadedTracks((prev) => {
-              const newDownloads = { ...prev };
-              delete newDownloads[source.id];
-              return newDownloads;
-            });
-            Alert.alert("Успех", "Трек удален.");
-          } catch (error) {
-            console.error("Ошибка удаления:", error);
-            Alert.alert("Ошибка", "Не удалось удалить трек.");
-          }
-        },
-      },
-    ]);
-  };
+  // --- 5. UI КОМПОНЕНТА ---
+  if (!currentTrack) {
+    return (
+      <View style={styles.container}>
+        <Text>Загрузка...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Аудиоплеер</Text>
-      <Text style={styles.trackInfo}>
-        Текущее качество: {currentTrack.bitrate}
-      </Text>
+      <Text style={styles.title}>{currentTrack.title}</Text>
+      <Text style={styles.trackInfo}>Исполнитель: {currentTrack.artist}</Text>
 
       <PlayerControls
         isPlaying={isPlaying}
@@ -160,23 +276,23 @@ export default function AdvancedAudioPlayer() {
 
       <View style={styles.bitrateSelector}>
         <Text style={styles.bitrateTitle}>Список треков:</Text>
-        {audioSources.map((source) => (
-          <View key={source.id} style={styles.trackContainer}>
+        {MOCKED_TRACKS.map((track) => (
+          <View key={track.id} style={styles.trackContainer}>
             <Text
               style={[
                 styles.trackTitle,
-                currentTrack.id === source.id && styles.activeTrackTitle,
+                currentTrack.id === track.id && styles.activeTrackTitle,
               ]}
-              onPress={() => switchBitrate(source)}
+              onPress={() => playSound(track)}
             >
-              {source.bitrate} качество
+              {track.title}
             </Text>
 
             <View style={styles.iconContainer}>
-              {downloadedTracks[source.id] ? (
-                <DeleteButton onPress={() => deleteTrack(source)} />
+              {downloadedTracks[track.id] ? (
+                <DeleteButton onPress={() => deleteTrack(track)} />
               ) : (
-                <DownloadButton onPress={() => downloadTrack(source)} />
+                <DownloadButton onPress={() => downloadTrack(track)} />
               )}
             </View>
           </View>

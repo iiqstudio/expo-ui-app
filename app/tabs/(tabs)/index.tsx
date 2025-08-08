@@ -1,4 +1,4 @@
-import EditScreenInfo from "@/components/EditScreenInfo";
+import AdvancedAudioPlayer from "@/components/custom/AdvancedAudioPlayer";
 import { Center } from "@/components/ui/center";
 import { Divider } from "@/components/ui/divider";
 import { Heading } from "@/components/ui/heading";
@@ -10,6 +10,7 @@ export default function Home() {
       <Heading className="font-bold text-2xl">Home Page</Heading>
       <Divider className="my-[30px] w-[80%]" />
       <Text className="p-4">Example below to use gluestack-ui components.</Text>
+      <AdvancedAudioPlayer />
     </Center>
   );
 }
