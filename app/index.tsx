@@ -6,13 +6,12 @@ import { Text } from "@/components/ui/text";
 import { Link, useRouter } from "expo-router";
 import { Button, ButtonText } from "@/components/ui/button";
 import { SafeAreaView } from "react-native-safe-area-context";
-import PaymentTest from "@/components/custom/Payment";
 
 export default function Home() {
   const router = useRouter();
 
   const handleStart = () => {
-    router.replace("/(onboarding)/step-one");
+    router.replace("/(onboarding)/sigin");
   };
 
   return (
